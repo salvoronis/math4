@@ -1,7 +1,7 @@
 package main
 
 import(
-	//"fmt"
+	"fmt"
 	"github.com/g3n/engine/app"
 	"github.com/g3n/engine/camera"
 	"github.com/g3n/engine/core"
@@ -14,18 +14,10 @@ import(
 	"math"
 )
 
-func main(){
-	dlag := make([]float32, 0)
-	for i := 0.0; i < math.Pi*10; i+=0.1 {
-		lagrange := InterpolateLagrangePolynomial(float32(i),math.Pi*10, 32, one)
-		dlag = append(dlag, lagrange)
-	}
-	
+func main(){	
 	a := app.App()
 	scene := core.NewNode()
-
 	gui.Manager().Set(scene)
-
 	chart := gui.NewChart(0, 0)
 	chart.SetMargins(10, 10, 10, 10)
 	chart.SetBorders(2, 2, 2, 2)
@@ -42,37 +34,10 @@ func main(){
 	chart.SetRangeX(0.0, 7.0, 70.0)
 	scene.Add(chart)
 
-	var g1 *gui.Graph
-	data1 := make([]float32, 0)
-	var x float32
-	for x = 0; x < math.Pi*10; x += 0.1 {
-		data1 = append(data1, 10*math32.Sin(x)*math32.Sin(x/10))
-	}
-	cbG1 := gui.NewCheckBox("Graph1")
-	cbG1.SetPosition(10, float32(height)-100)
-	cbG1.Subscribe(gui.OnChange, func(name string, ev interface{}) {
-		if cbG1.Value() {
-			g1 = chart.AddLineGraph(&math32.Color{0, 0, 1}, data1)
-		} else {
-			chart.RemoveGraph(g1)
-			g1 = nil
-		}
-	})
-	scene.Add(cbG1)
-	cbG1.SetValue(true)
-
-	var g2 *gui.Graph
-	cbG2 := gui.NewCheckBox("Graph2")
-	cbG2.SetPosition(90, float32(height)-100)
-	cbG2.Subscribe(gui.OnChange, func(name string, ev interface{}) {
-		if cbG2.Value() {
-			g2 = chart.AddLineGraph(&math32.Color{1, 0, 0}, dlag)
-		} else {
-			chart.RemoveGraph(g2)
-			g2 = nil
-		}
-	})
-	scene.Add(cbG2)
+	createLine(scene, float32(height)-100, chart, one, "10*sin(x)*sin(x/10)")
+	createLine(scene, float32(height)-80, chart, two, "sin(x)")
+	createLine(scene, float32(height)-60, chart, three, "sqrt(x)")
+	createLine(scene, float32(height)-40, chart, four, "sin(2.5*cos(x))")
 
 	cam := camera.New(1)
 	cam.SetPosition(0, 0, 3)
@@ -94,16 +59,8 @@ func main(){
 	})
 }
 
-func InterpolateLagrangePolynomial(x,max float32, steps int, f func(float32) float32) float32{
-	var step float32 = max/float32(steps)
-	var xValues, yValues []float32 = make([]float32, steps), make([]float32, steps)
+func InterpolateLagrangePolynomial(x,max float32, steps int, f func(float32) float32, xValues,yValues []float32) float32{
 	var lagrange_pol, basics_pol float32
-	var count int = 0
-	for i := float32(0.0); i < max; i+=step {
-		xValues[count] = i
-		yValues[count] = f(i)
-		count++
-	}
 
 	for i := 0; i < steps; i++ {
 		basics_pol = 1
@@ -118,8 +75,103 @@ func InterpolateLagrangePolynomial(x,max float32, steps int, f func(float32) flo
 	return lagrange_pol
 }
 
+func getDots(max float32, steps int, f func(float32) float32) ([]float32, []float32){
+	var step float32 = max/float32(steps)
+	var xValues, yValues []float32 = make([]float32, steps), make([]float32, steps)
+	var count int = 0
+	for i := float32(0.0); i < max; i+=step {
+		xValues[count] = i
+		yValues[count] = f(i)
+		count++
+	}
+	return xValues, yValues
+}
+
 func one(x float32) float32{
 	return 10*math32.Sin(x)*math32.Sin(x/10)
 }
 
+func two(x float32) float32{
+	return math32.Sin(x)
+}
 
+func three(x float32) float32{
+	return math32.Sqrt(x)
+}
+
+func four(x float32) float32{
+	return math32.Sin(2.5*math32.Cos(x))
+}
+
+func makeGraph(scene *core.Node, x,y float32, data []float32, color *math32.Color, chart *gui.Chart, xValues, yValues []float32, label string) {
+	var dots []*gui.Image = make([]*gui.Image,0)
+	if len(xValues) != 0 {
+		for i := 0; i < len(xValues); i++ {
+			dot, err := gui.NewImage("./dot.png")
+			if err != nil {
+				fmt.Println("ooops")
+			}
+			dot.SetPosition(49+xValues[i]*20.857,252-yValues[i]*21)
+			dots = append(dots, dot)
+		}
+	}
+	var g3 *gui.Graph
+	cbG3 := gui.NewCheckBox(label)
+	cbG3.SetPosition(x, y)
+	cbG3.Subscribe(gui.OnChange, func(name string, ev interface{}) {
+		if cbG3.Value() {
+			g3 = chart.AddLineGraph(color, data)
+			for i := 0; i < len(dots); i++ {
+				scene.Add(dots[i])
+			}
+		} else {
+			chart.RemoveGraph(g3)
+			g3 = nil
+			for i := 0; i < len(dots); i++ {
+				scene.Remove(dots[i])
+			}
+		}
+	})
+	scene.Add(cbG3)
+}
+
+func createLine(scene *core.Node, height float32, chart *gui.Chart, f func(float32) float32, label string){
+	data1 := make([]float32, 0)
+	for x := 0.0; x < math.Pi*10; x += 0.1 {
+		data1 = append(data1, f(float32(x)))
+	}
+	makeGraph(scene, 10, height, data1, &math32.Color{0, 0, 1}, chart, []float32{}, []float32{}, label)
+
+	dlag := make([]float32, 0)
+	xValues, yValues := getDots(math.Pi*10, 8, f)
+	for i := 0.0; i < math.Pi*10; i+=0.1 {
+		lagrange := InterpolateLagrangePolynomial(float32(i),math.Pi*10, 8, f, xValues, yValues)
+		dlag = append(dlag, lagrange)
+	}
+	makeGraph(scene, 150, height, dlag, &math32.Color{1, 0, 0}, chart, xValues, yValues,"8 dots")
+
+	xValues1, yValues1 := getDots(math.Pi*10, 20, f)
+	dlagt := make([]float32, 0)
+	for i := 0.0; i < math.Pi*10; i+=0.1 {
+		lagrange := InterpolateLagrangePolynomial(float32(i),math.Pi*10, 20, f, xValues1, yValues1)
+		dlagt = append(dlagt, lagrange)
+	}
+	makeGraph(scene, 220, height, dlagt, &math32.Color{0, 1, 0}, chart, xValues1, yValues1, "20 dots")
+
+	xValues2, yValues2 := getDots(math.Pi*10, 20, f)
+	yValues2[10] = 14.2
+	dlagt2 := make([]float32, 0)
+	for i := 0.0; i < math.Pi*10; i+=0.1 {
+		lagrange := InterpolateLagrangePolynomial(float32(i),math.Pi*10, 20, f, xValues2, yValues2)
+		dlagt2 = append(dlagt2, lagrange)
+	}
+	makeGraph(scene, 300, height, dlagt2, &math32.Color{0, 1, 1}, chart, xValues2, yValues2, "wrong y")
+
+	xValues3, yValues3 := getDots(math.Pi*10, 3, f)
+	dlagt3 := make([]float32, 0)
+	for i := 0.0; i < math.Pi*10; i+=0.1 {
+		lagrange := InterpolateLagrangePolynomial(float32(i),math.Pi*10, 3, f, xValues3, yValues3)
+		dlagt3 = append(dlagt3, lagrange)
+	}
+	makeGraph(scene, 380, height, dlagt3, &math32.Color{0, 0, 0}, chart, xValues3, yValues3, "only 3 dots")
+}
