@@ -1,7 +1,7 @@
 package main
 
 import(
-	"fmt"
+	//"fmt"
 	"github.com/g3n/engine/app"
 	"github.com/g3n/engine/camera"
 	"github.com/g3n/engine/core"
@@ -17,9 +17,8 @@ import(
 func main(){
 	dlag := make([]float32, 0)
 	for i := 0.0; i < math.Pi*10; i+=0.1 {
-		lagrange := InterpolateLagrangePolynomial(float32(i), 32, one)
+		lagrange := InterpolateLagrangePolynomial(float32(i),math.Pi*10, 32, one)
 		dlag = append(dlag, lagrange)
-		//fmt.Println(lagrange)	
 	}
 	
 	a := app.App()
@@ -38,7 +37,6 @@ func main(){
 	chart.SetSize(float32(width), float32(height)-100)
 	chart.SetScaleY(5, &math32.Color{0.8, 0.8, 0.8})
 	chart.SetFontSizeY(13)
-	//chart.SetRangeY(-10.0, 10.0)
 	chart.SetScaleX(5, &math32.Color{0.8, 0.8, 0.8})
 	chart.SetFontSizeX(13)
 	chart.SetRangeX(0.0, 7.0, 70.0)
@@ -50,7 +48,6 @@ func main(){
 	for x = 0; x < math.Pi*10; x += 0.1 {
 		data1 = append(data1, 10*math32.Sin(x)*math32.Sin(x/10))
 	}
-	//chart.AddLineGraph(&math32.Color{0, 0, 1}, data1)
 	cbG1 := gui.NewCheckBox("Graph1")
 	cbG1.SetPosition(10, float32(height)-100)
 	cbG1.Subscribe(gui.OnChange, func(name string, ev interface{}) {
@@ -65,11 +62,6 @@ func main(){
 	cbG1.SetValue(true)
 
 	var g2 *gui.Graph
-	/*data2 := make([]float32, 0)
-	var x2 float32
-	for x2 = 0; x2 < 2*math.Pi*10; x2 += 0.1 {
-		data2 = append(data2, -2+5*math32.Cos(x2/3))
-	}*/
 	cbG2 := gui.NewCheckBox("Graph2")
 	cbG2.SetPosition(90, float32(height)-100)
 	cbG2.Subscribe(gui.OnChange, func(name string, ev interface{}) {
@@ -96,25 +88,26 @@ func main(){
 
 	a.Gls().ClearColor(0.2, 0.7, 0.9, 10.0)
 
-	// Run the application
 	a.Run(func(renderer *renderer.Renderer, deltaTime time.Duration) {
 		a.Gls().Clear(gls.DEPTH_BUFFER_BIT | gls.STENCIL_BUFFER_BIT | gls.COLOR_BUFFER_BIT)
 		renderer.Render(scene, cam)
 	})
 }
 
-func InterpolateLagrangePolynomial(x float32, size int, f func(float32) float32) float32{
-	var xValues, yValues []float32 = make([]float32, size), make([]float32, size)
+func InterpolateLagrangePolynomial(x,max float32, steps int, f func(float32) float32) float32{
+	var step float32 = max/float32(steps)
+	var xValues, yValues []float32 = make([]float32, steps), make([]float32, steps)
 	var lagrange_pol, basics_pol float32
-	for i := 0; i < size; i++ {
-		xValues[i] = float32(i)
-		yValues[i] = f(float32(i))
-		fmt.Println(xValues[i])
+	var count int = 0
+	for i := float32(0.0); i < max; i+=step {
+		xValues[count] = i
+		yValues[count] = f(i)
+		count++
 	}
 
-	for i := 0; i < size; i++ {
+	for i := 0; i < steps; i++ {
 		basics_pol = 1
-		for j := 0; j < size; j++ {
+		for j := 0; j < steps; j++ {
 			if j==i {
 				continue
 			}
