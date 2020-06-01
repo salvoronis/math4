@@ -12,6 +12,7 @@ import(
 	"github.com/g3n/engine/window"
 	"time"
 	"math"
+	"strconv"
 )
 
 func main(){	
@@ -38,6 +39,71 @@ func main(){
 	createLine(scene, float32(height)-80, chart, two, "sin(x)")
 	createLine(scene, float32(height)-60, chart, three, "sqrt(x)")
 	createLine(scene, float32(height)-40, chart, four, "sin(2.5*cos(x))")
+
+	dd1 := gui.NewDropDown(100, gui.NewImageLabel("func"))
+	dd1.SetPosition(480, float32(height)-100)
+	dd1.Add(gui.NewImageLabel("10*sin(x)*sin(x/10)"))
+	dd1.Add(gui.NewImageLabel("sin(x)"))
+	dd1.Add(gui.NewImageLabel("sqrt(x)"))
+	dd1.Add(gui.NewImageLabel("sin(2.5*cos(x))"))
+	scene.Add(dd1)
+
+	dd2 := gui.NewDropDown(100, gui.NewImageLabel("dots numb"))
+	dd2.SetPosition(480, float32(height)-80)
+	dd2.Add(gui.NewImageLabel("8"))
+	dd2.Add(gui.NewImageLabel("20"))
+	dd2.Add(gui.NewImageLabel("wrong y"))
+	dd2.Add(gui.NewImageLabel("3"))
+	scene.Add(dd2)
+
+	ed1 := gui.NewEdit(100, "there can be your y")
+	ed1.SetPosition(480, float32(height)-60)
+	scene.Add(ed1)
+
+	l1 := gui.NewLabel("")
+	l1.SetPosition(590, float32(height)-100)
+	scene.Add(l1)
+
+	b1 := gui.NewButton("find y")
+	b1.SetPosition(480, float32(height)-40)
+	b1.Subscribe(gui.OnClick, func(name string, ev interface{}) {
+		var f func(float32) float32
+		var dot int
+		var wrong bool = false
+		//fmt.Println(ed1.Text())
+		switch dd1.Selected().Text(){
+		case "10*sin(x)*sin(x/10)":
+			f = one
+		case "sin(x)":
+			f = two
+		case "sqrt(x)":
+			f = three
+		case "sin(x)sin(2.5*cos(x))":
+			f = four
+		}
+		switch dd2.Selected().Text(){
+		case "8":
+			dot = 8
+		case "20":
+			dot = 20
+		case "wrong y":
+			dot = 20
+			wrong = true
+		case "3":
+			dot = 3
+		}
+		xValues, yValues := getDots(math.Pi*10, dot, f)
+		if wrong {
+			yValues[10] = 14.2
+		}
+		x, err := strconv.ParseFloat(ed1.Text(),32)
+		if err != nil {
+			fmt.Println("oooooops") 
+		}
+		lagrange := InterpolateLagrangePolynomial(float32(x),math.Pi*10, dot, f, xValues, yValues)
+		l1.SetText(fmt.Sprintf("%f", lagrange))
+	})
+	scene.Add(b1)
 
 	cam := camera.New(1)
 	cam.SetPosition(0, 0, 3)
