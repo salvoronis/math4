@@ -70,7 +70,6 @@ func main(){
 		var f func(float32) float32
 		var dot int
 		var wrong bool = false
-		//fmt.Println(ed1.Text())
 		switch dd1.Selected().Text(){
 		case "10*sin(x)*sin(x/10)":
 			f = one
@@ -100,7 +99,7 @@ func main(){
 		if err != nil {
 			fmt.Println("oooooops") 
 		}
-		lagrange := InterpolateLagrangePolynomial(float32(x),math.Pi*10, dot, f, xValues, yValues)
+		lagrange := InterpolateLagrangePolynomial(float32(x), dot, f, xValues, yValues)
 		l1.SetText(fmt.Sprintf("%f", lagrange))
 	})
 	scene.Add(b1)
@@ -125,7 +124,7 @@ func main(){
 	})
 }
 
-func InterpolateLagrangePolynomial(x,max float32, steps int, f func(float32) float32, xValues,yValues []float32) float32{
+func InterpolateLagrangePolynomial(x float32, steps int, f func(float32) float32, xValues,yValues []float32) float32{
 	var lagrange_pol, basics_pol float32
 
 	for i := 0; i < steps; i++ {
@@ -211,7 +210,7 @@ func createLine(scene *core.Node, height float32, chart *gui.Chart, f func(float
 	dlag := make([]float32, 0)
 	xValues, yValues := getDots(math.Pi*10, 8, f)
 	for i := 0.0; i < math.Pi*10; i+=0.1 {
-		lagrange := InterpolateLagrangePolynomial(float32(i),math.Pi*10, 8, f, xValues, yValues)
+		lagrange := InterpolateLagrangePolynomial(float32(i), 8, f, xValues, yValues)
 		dlag = append(dlag, lagrange)
 	}
 	makeGraph(scene, 150, height, dlag, &math32.Color{1, 0, 0}, chart, xValues, yValues,"8 dots")
@@ -219,7 +218,7 @@ func createLine(scene *core.Node, height float32, chart *gui.Chart, f func(float
 	xValues1, yValues1 := getDots(math.Pi*10, 20, f)
 	dlagt := make([]float32, 0)
 	for i := 0.0; i < math.Pi*10; i+=0.1 {
-		lagrange := InterpolateLagrangePolynomial(float32(i),math.Pi*10, 20, f, xValues1, yValues1)
+		lagrange := InterpolateLagrangePolynomial(float32(i), 20, f, xValues1, yValues1)
 		dlagt = append(dlagt, lagrange)
 	}
 	makeGraph(scene, 220, height, dlagt, &math32.Color{0, 1, 0}, chart, xValues1, yValues1, "20 dots")
@@ -228,7 +227,7 @@ func createLine(scene *core.Node, height float32, chart *gui.Chart, f func(float
 	yValues2[10] = 14.2
 	dlagt2 := make([]float32, 0)
 	for i := 0.0; i < math.Pi*10; i+=0.1 {
-		lagrange := InterpolateLagrangePolynomial(float32(i),math.Pi*10, 20, f, xValues2, yValues2)
+		lagrange := InterpolateLagrangePolynomial(float32(i), 20, f, xValues2, yValues2)
 		dlagt2 = append(dlagt2, lagrange)
 	}
 	makeGraph(scene, 300, height, dlagt2, &math32.Color{0, 1, 1}, chart, xValues2, yValues2, "wrong y")
@@ -236,7 +235,7 @@ func createLine(scene *core.Node, height float32, chart *gui.Chart, f func(float
 	xValues3, yValues3 := getDots(math.Pi*10, 3, f)
 	dlagt3 := make([]float32, 0)
 	for i := 0.0; i < math.Pi*10; i+=0.1 {
-		lagrange := InterpolateLagrangePolynomial(float32(i),math.Pi*10, 3, f, xValues3, yValues3)
+		lagrange := InterpolateLagrangePolynomial(float32(i), 3, f, xValues3, yValues3)
 		dlagt3 = append(dlagt3, lagrange)
 	}
 	makeGraph(scene, 380, height, dlagt3, &math32.Color{0, 0, 0}, chart, xValues3, yValues3, "only 3 dots")
